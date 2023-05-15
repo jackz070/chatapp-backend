@@ -16,12 +16,16 @@ const router = express.Router();
 
 router.post("/text", async (req, res) => {
   try {
-    const { text, activeChatId } = req.body;
+    const { text, messageHistory, activeChatId } = req.body;
 
     const response = await openai.createChatCompletion({
       model: "gpt-3.5-turbo",
       messages: [
-        { role: "system", content: "You are a helpful assistant." },
+        {
+          role: "system",
+          content: "You are a helpful assistant, who is friendly and caring.",
+        },
+        ...messageHistory,
         { role: "user", content: text },
       ],
     });
@@ -37,41 +41,6 @@ router.post("/text", async (req, res) => {
         },
       }
     );
-    res.status(200).json({ text: response.data.choices[0].message.content });
-  } catch (error) {
-    console.error("error", error.response.data.error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-router.post("/code", async (req, res) => {
-  try {
-    const { text, activeChatId } = req.body;
-
-    const response = await openai.createChatCompletion({
-      model: "gpt-3.5-turbo",
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are an assistant coder who responds with only code and basic explanations unless asked to elaborate on how the code operat.",
-        },
-        { role: "user", content: text },
-      ],
-    });
-
-    await axios.post(
-      `https://api.chatengine.io/chats/${activeChatId}/messages/`,
-      { text: response.data.choices[0].message.content },
-      {
-        headers: {
-          "Project-ID": process.env.PROJECT_ID,
-          "User-Name": process.env.BOT_USER_NAME,
-          "User-Secret": process.env.BOT_USER_SECRET,
-        },
-      }
-    );
-
     res.status(200).json({ text: response.data.choices[0].message.content });
   } catch (error) {
     console.error("error", error.response.data.error);
